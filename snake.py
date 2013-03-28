@@ -3,7 +3,7 @@
 
 # snake.py
 # Darío Lumbreras
-# Marzo 17, 2013
+# Marzo 27, 2013
 
 import cairo
 import gobject
