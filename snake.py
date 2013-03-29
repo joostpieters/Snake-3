@@ -56,33 +56,12 @@ class Snake:
   def random_position(self):
     return self.delta * random.randint(1, self.rows - 1), self.delta * random.randint(1, self.cols - 1)
 
-  def update(self):
-    # Actualiza la pantalla.
+  def update_screen(self):
     window = self.screen.window
     window.invalidate_region(window.get_clip_region(), False)
     window.process_updates(True)
 
-  def on_key_press_event(self, widget, event):
-    # Verificar que la tecla sea alguna de las flechas.
-    # https://github.com/GNOME/pygtk/blob/master/gtk/keysyms.py
-    if event.keyval >= 0xFF51 and event.keyval <= 0xFF54:
-      # Evitar cambiar a la dirección opuesta.
-      if abs(self.key - event.keyval) != 2:
-        self.key = event.keyval
-
-  def on_expose_event(self, widget, event):
-    cr = widget.window.cairo_create()
-
-    # Region que se actualizará.
-    cr.rectangle(0, 0, self.width, self.height)
-    cr.clip()
-
-    # Fondo.
-    cr.rectangle(0, 0, self.width, self.height)
-    cr.set_source_rgb(0.0, 0.0, 0.0)
-    cr.fill_preserve()
-    cr.stroke()
-
+  def update(self):
     # Coordenadas de la cabeza.
     x, y = self.snake[0]
 
@@ -112,10 +91,22 @@ class Snake:
       self.success = True
       self.snake.append(self.snake[-1])
 
+    # Volver a colocar la comida si esta fue alcanzada.
+    if self.success:
+      self.success = False
+      self.food = self.random_position()
+
     # La sensación de movimiento se logra quitando la cola de la serpiente
     # y agregando la cabeza con su nueva posición.
     self.snake.pop()
     self.snake.insert(0, point)
+
+  def draw(self, cr):
+    # Fondo.
+    cr.rectangle(0, 0, self.width, self.height)
+    cr.set_source_rgb(0.0, 0.0, 0.0)
+    cr.fill_preserve()
+    cr.stroke()
 
     # Dibujar la serpiente.
     for x, y in self.snake:
@@ -125,11 +116,6 @@ class Snake:
       cr.set_source_rgb(0.0, 0.0, 0.0)
       cr.stroke()
 
-    # Volver a colocar la comida si esta fue alcanzada.
-    if self.success:
-      self.success = False
-      self.food = self.random_position()
-
     # Dibujar la comida.
     cr.rectangle(self.food[0], self.food[1], self.delta, self.delta)
     cr.set_source_rgb(0.0, 1.0, 0.0)
@@ -137,8 +123,30 @@ class Snake:
     cr.set_source_rgb(0.0, 0.0, 0.0)
     cr.stroke()
 
+  def on_key_press_event(self, widget, event):
+    # Verificar que la tecla sea alguna de las flechas.
+    # https://github.com/GNOME/pygtk/blob/master/gtk/keysyms.py
+    if event.keyval >= 0xFF51 and event.keyval <= 0xFF54:
+      # Evitar cambiar a la dirección opuesta.
+      if abs(self.key - event.keyval) != 2:
+        self.key = event.keyval
+
+  def on_expose_event(self, widget, event):
+    # Contexto de Cairo.
+    cr = widget.window.cairo_create()
+
+    # Region que se actualizará.
+    cr.rectangle(0, 0, self.width, self.height)
+    cr.clip()
+
+    # Lógica del juego.
+    self.update()
+
+    # Dibujar todo.
+    self.draw(cr)
+
     # Actualiza la pantalla.
-    gobject.timeout_add(60, self.update)
+    gobject.timeout_add(60, self.update_screen)
 
   def main(self):
     gtk.main()
