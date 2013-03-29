@@ -7,10 +7,7 @@ TODO
 ----
 
 - Checar límites de la pantalla.
-- No cambiar a la dirección contraria.
 - Un buen game loop.
-- Puntaje
-- Vidas
+- Puntaje.
+- Vidas.
 - No poder tocar el cuerpo de la serpiente.
-
-O sea, falta todo.

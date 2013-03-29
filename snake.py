@@ -44,14 +44,17 @@ class Snake:
     # Agregamos la cabeza de la serpiente en el medio.
     self.snake = [(alloc.width / 2, alloc.height / 2)]
 
-    # Iniciamos la dirección.
-    self.direction = gtk.keysyms.Up
+    # Dirección inicial.
+    self.key = gtk.keysyms.Up
 
     # Establecemos la comida.
-    self.food = (self.delta * random.randint(1, self.rows - 1), self.delta * random.randint(1, self.cols - 1))
+    self.food = self.random_position()
 
-    # La serpiente se comio la comida.
+    # La serpiente se comió la comida.
     self.success = False
+
+  def random_position(self):
+    return self.delta * random.randint(1, self.rows - 1), self.delta * random.randint(1, self.cols - 1)
 
   def update(self):
     # Actualiza la pantalla.
@@ -63,7 +66,9 @@ class Snake:
     # Verificar que la tecla sea alguna de las flechas.
     # https://github.com/GNOME/pygtk/blob/master/gtk/keysyms.py
     if event.keyval >= 0xFF51 and event.keyval <= 0xFF54:
-      self.direction = event.keyval
+      # Evitar cambiar a la dirección opuesta.
+      if abs(self.key - event.keyval) != 2:
+        self.key = event.keyval
 
   def on_expose_event(self, widget, event):
     cr = widget.window.cairo_create()
@@ -81,26 +86,36 @@ class Snake:
     # Coordenadas de la cabeza.
     x, y = self.snake[0]
 
-    # Mover la serpiente.
-    if self.direction == gtk.keysyms.Left:
+    # Mover la cabeza de la serpiente.
+    if self.key == gtk.keysyms.Left:
       x = x - self.delta
-    elif self.direction == gtk.keysyms.Up:
+    elif self.key == gtk.keysyms.Up:
       y = y - self.delta
-    elif self.direction == gtk.keysyms.Right:
+    elif self.key == gtk.keysyms.Right:
       x = x + self.delta
-    elif self.direction == gtk.keysyms.Down:
+    elif self.key == gtk.keysyms.Down:
       y = y + self.delta
 
-    # Verificar si la serpiente se comio la comida.
-    if (x, y) == self.food:
+    # Se rebasaron los límites de la pantalla.
+    if x < 0 or x >= self.width or y < 0 or y >= self.height:
+      pass
+
+    # Tupla con la nueva posición.
+    point = x, y
+
+    # La serpiente se tocó asi misma.
+    if point in self.snake:
+      pass
+
+    # La serpiente se comió la comida.
+    if point == self.food:
       self.success = True
       self.snake.append(self.snake[-1])
 
-    # Quitamos el ultimo elemento
+    # La sensación de movimiento se logra quitando la cola de la serpiente
+    # y agregando la cabeza con su nueva posición.
     self.snake.pop()
-
-    # Agregamos el nuevo elemento.
-    self.snake.insert(0, (x, y))
+    self.snake.insert(0, point)
 
     # Dibujar la serpiente.
     for x, y in self.snake:
@@ -113,7 +128,7 @@ class Snake:
     # Volver a colocar la comida si esta fue alcanzada.
     if self.success:
       self.success = False
-      self.food = (self.delta * random.randint(1, self.rows - 1), self.delta * random.randint(1, self.cols - 1))
+      self.food = self.random_position()
 
     # Dibujar la comida.
     cr.rectangle(self.food[0], self.food[1], self.delta, self.delta)
